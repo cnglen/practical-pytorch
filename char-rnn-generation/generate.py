@@ -5,6 +5,7 @@ import torch
 from helpers import *
 from model import *
 
+
 def generate(decoder, prime_str='A', predict_len=100, temperature=0.8):
     hidden = decoder.init_hidden()
     prime_input = char_tensor(prime_str)
@@ -13,22 +14,27 @@ def generate(decoder, prime_str='A', predict_len=100, temperature=0.8):
     # Use priming string to "build up" hidden state
     for p in range(len(prime_str) - 1):
         _, hidden = decoder(prime_input[p], hidden)
-        
+
     inp = prime_input[-1]
-    
+
     for p in range(predict_len):
         output, hidden = decoder(inp, hidden)
-        
+
         # Sample from the network as a multinomial distribution
         output_dist = output.data.view(-1).div(temperature).exp()
         top_i = torch.multinomial(output_dist, 1)[0]
-        
+
+        # _, top_i = output.data.max(1)
+        # # print(top_i)
+        # top_i = top_i[0]
+
         # Add predicted character to string and use as next input
         predicted_char = all_characters[top_i]
         predicted += predicted_char
         inp = char_tensor(predicted_char)
 
     return predicted
+
 
 if __name__ == '__main__':
     # Parse command line arguments
@@ -43,4 +49,3 @@ if __name__ == '__main__':
     decoder = torch.load(args.filename)
     del args.filename
     print(generate(decoder, **vars(args)))
-

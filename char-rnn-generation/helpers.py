@@ -13,13 +13,16 @@ from torch.autograd import Variable
 all_characters = string.printable
 n_characters = len(all_characters)
 
+
 def read_file(filename):
     file = unidecode.unidecode(open(filename).read())
     return file, len(file)
 
 # Turning a string into a tensor
 
+
 def char_tensor(string):
+    """convert string(list of char) ot list of int"""
     tensor = torch.zeros(len(string)).long()
     for c in range(len(string)):
         tensor[c] = all_characters.index(string[c])
@@ -27,9 +30,9 @@ def char_tensor(string):
 
 # Readable time elapsed
 
+
 def time_since(since):
     s = time.time() - since
     m = math.floor(s / 60)
     s -= m * 60
     return '%dm %ds' % (m, s)
-

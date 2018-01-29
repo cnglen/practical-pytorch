@@ -23,13 +23,22 @@ args = argparser.parse_args()
 
 file, file_len = read_file(args.filename)
 
+
 def random_training_set(chunk_len):
+    """随机找一个长度为chunk_len+1的Chunk, 前chunk_len个元素列表为input, 后chunk_len个元素列表为target:
+    假设chunk_len=5,
+    start_index=7, end_index=13
+    Chun   = 7,  8,  9, 10, 11, 12
+    input  = 7,  8,  9, 10, 11
+    target = 8,  9, 10, 11, 12
+    """
     start_index = random.randint(0, file_len - chunk_len)
     end_index = start_index + chunk_len + 1
     chunk = file[start_index:end_index]
     inp = char_tensor(chunk[:-1])
     target = char_tensor(chunk[1:])
     return inp, target
+
 
 decoder = RNN(n_characters, args.hidden_size, n_characters, args.n_layers)
 decoder_optimizer = torch.optim.Adam(decoder.parameters(), lr=args.learning_rate)
@@ -39,12 +48,13 @@ start = time.time()
 all_losses = []
 loss_avg = 0
 
+
 def train(inp, target):
-    hidden = decoder.init_hidden()
+    hidden = decoder.init_hidden()  # n_layers, 1, hidden_size
     decoder.zero_grad()
     loss = 0
 
-    for c in range(args.chunk_len):
+    for c in range(args.chunk_len):  # character in each chunk
         output, hidden = decoder(inp[c], hidden)
         loss += criterion(output, target[c])
 
@@ -53,10 +63,12 @@ def train(inp, target):
 
     return loss.data[0] / args.chunk_len
 
+
 def save():
     save_filename = os.path.splitext(os.path.basename(args.filename))[0] + '.pt'
     torch.save(decoder, save_filename)
     print('Saved as %s' % save_filename)
+
 
 try:
     print("Training for %d epochs..." % args.n_epochs)
@@ -74,4 +86,3 @@ try:
 except KeyboardInterrupt:
     print("Saving before quit...")
     save()
-
